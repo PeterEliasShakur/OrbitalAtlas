@@ -1,0 +1,119 @@
+name: Refresh orbital data & deploy
+
+# Runs on every push to main, every ~4 hours on a schedule, and on demand.
+# Each run tries to refresh the CelesTrak orbital elements, falls back to the
+# last-known-good snapshot if that fails, regenerates the single self-contained
+# HTML page (GitHub_Pages/index.html) with that snapshot embedded, tests it and
+# publishes ONLY that index.html to GitHub Pages. Scheduled runs do NOT commit
+# to the repository: the refreshed snapshot only goes into the deployed page
+# (and an Actions cache entry used as the next run's last-known-good fallback).
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # minute 17 avoids the top-of-hour rush on GitHub's scheduler and on CelesTrak
+    - cron: '17 */4 * * *'
+  workflow_dispatch:
+    inputs:
+      force_refresh:
+        description: 'Download from CelesTrak even if the cached snapshot is < 2 h old'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore last-known-good orbital snapshot
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/orbits.json
+          key: orbits-${{ github.run_id }}
+          restore-keys: |
+            orbits-
+
+      - name: Refresh orbital elements from CelesTrak
+        # The script picks the newest of the committed snapshot and the cached
+        # one, skips the download if it is < 120 min old (CelesTrak updates GP
+        # data about every 2 h), requests each group once without retries, stops
+        # on HTTP 403/429, validates everything and only then replaces the file.
+        # It exits non-zero only if no usable data exists at all.
+        run: >
+          node scripts/fetch-orbits.mjs
+          --previous .cache/orbits.json
+          ${{ github.event_name == 'workflow_dispatch' && inputs.force_refresh && '--force' || '' }}
+
+      - name: Show snapshot freshness
+        run: |
+          node -e "const m=require('./public/data/orbits.json').meta;console.log('records:',m.recordCount,'| last fetch:',m.lastSuccessfulFetch,'| fresh groups:',m.freshGroups+'/'+m.totalGroups);for(const g of m.groups.filter(g=>g.status!=='fresh'))console.log('  ',g.id,g.status,g.error||'')"
+
+      - name: Keep snapshot for the next run
+        run: mkdir -p .cache && cp public/data/orbits.json .cache/orbits.json
+
+      - name: Save snapshot cache
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/orbits.json
+          key: orbits-${{ github.run_id }}
+
+      - name: Generate the single-file site (data, textures, worker, libraries embedded)
+        run: npm run build:standalone
+
+      - name: Unit tests + checks of the generated HTML
+        run: npm test
+
+      - name: Browser end-to-end test of the generated HTML (file://, http and https)
+        # Uses the runner's preinstalled Google Chrome with software WebGL.
+        # Informational: a failure is reported but does not block deployment.
+        continue-on-error: true
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: npm run test:standalone
+
+      - name: Prepare Pages artifact (index.html only)
+        run: |
+          mkdir -p _site
+          cp GitHub_Pages/index.html _site/index.html
+          ls -la _site
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

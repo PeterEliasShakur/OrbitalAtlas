@@ -1,0 +1,33 @@
+{
+  "name": "orbital-atlas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Orbital Atlas — interactive 3D Earth and satellite tracking dashboard driven by CelesTrak OMM data and SGP4 propagation.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:standalone": "node scripts/build-standalone.mjs",
+    "preview": "vite preview",
+    "fetch:orbits": "node scripts/fetch-orbits.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:standalone": "node tests/browser/standalone.e2e.mjs"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "playwright-core": "1.56.1",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  },
+  "dependencies": {
+    "@fontsource/inter": "5.3.0",
+    "@fontsource/jetbrains-mono": "5.3.0",
+    "globe.gl": "2.46.2",
+    "satellite.js": "7.2.0",
+    "three": "0.187.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

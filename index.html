@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Orbital Atlas — Explore Earth's Orbit</title>
+    <meta name="description" content="Interactive 3D Earth with real satellites propagated in your browser with SGP4 from CelesTrak orbital elements, plus live ISS position from WhereTheISS.at." />
+    <meta name="theme-color" content="#030712" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body>
+    <!-- ============================== ICON SPRITE ============================== -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs>
+        <symbol id="i-logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="7.5" fill="none" stroke="currentColor" stroke-width="2"/><ellipse cx="16" cy="16" rx="14" ry="5.2" fill="none" stroke="currentColor" stroke-width="1.6" transform="rotate(-28 16 16)" opacity=".8"/><circle cx="27.6" cy="9.6" r="2.2" fill="currentColor"/></symbol>
+        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></symbol>
+        <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="4" height="13" rx="1" fill="currentColor"/><rect x="13.5" y="5.5" width="4" height="13" rx="1" fill="currentColor"/></symbol>
+        <symbol id="i-live" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M7.1 16.9a7 7 0 010-9.8M16.9 7.1a7 7 0 010 9.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-back" viewBox="0 0 24 24"><path d="M11 7l-5 5 5 5M18 7l-5 5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-fwd" viewBox="0 0 24 24"><path d="M13 7l5 5-5 5M6 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-follow" viewBox="0 0 24 24"><path d="M12 3l7 16-7-4-7 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+        <symbol id="i-home" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 12h16M12 4c3 3.2 3 12.8 0 16M12 4c-3 3.2-3 12.8 0 16" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6M12 7.5v.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+        <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5zM20 5.5A1.5 1.5 0 0018.5 4H13v16h5.5a1.5 1.5 0 001.5-1.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+        <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+        <symbol id="i-sat" viewBox="0 0 24 24"><rect x="9.5" y="9.5" width="5" height="5" rx="1" transform="rotate(45 12 12)" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 8.5L5 5M15.5 15.5L19 19" stroke="currentColor" stroke-width="1.8"/><rect x="1.5" y="3.5" width="5" height="3" rx=".5" transform="rotate(45 4 5)" fill="currentColor"/><rect x="17.5" y="17.5" width="5" height="3" rx=".5" transform="rotate(45 20 19)" fill="currentColor"/></symbol>
+        <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20h16M7 16v-5M12 16V6M17 16v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 12h17" stroke="currentColor" stroke-width="1.5"/><ellipse cx="12" cy="12" rx="3.8" ry="8.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+        <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3.5l9.5 16.5h-19z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.2v.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+        <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="2.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 6v12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+        <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 102.2-5.3M4.5 4v4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      </defs>
+    </svg>
+
+    <!-- ============================== LOADING ============================== -->
+    <div id="loader" class="loader" role="status" aria-live="polite">
+      <div class="loader-inner">
+        <svg class="loader-logo"><use href="#i-logo"/></svg>
+        <div class="loader-title">ORBITAL ATLAS</div>
+        <div class="loader-bar"><span id="loader-progress"></span></div>
+        <div id="loader-msg" class="loader-msg">Initialising…</div>
+      </div>
+    </div>
+
+    <div id="fatal" class="fatal" hidden role="alert">
+      <div class="fatal-card">
+        <svg class="fatal-icon"><use href="#i-warn"/></svg>
+        <h1 id="fatal-title">Something went wrong</h1>
+        <p id="fatal-msg"></p>
+        <button class="btn" type="button" onclick="location.reload()">Reload</button>
+      </div>
+    </div>
+
+    <noscript><div class="fatal"><div class="fatal-card"><h1>JavaScript required</h1><p>Orbital Atlas computes satellite positions in your browser and needs JavaScript enabled.</p></div></div></noscript>
+
+    <div class="app" id="app">
+      <!-- ============================== TOP BAR ============================== -->
+      <header class="topbar">
+        <div class="brand">
+          <svg class="brand-logo"><use href="#i-logo"/></svg>
+          <div class="brand-text">
+            <span class="brand-name">ORBITAL ATLAS</span>
+            <span class="brand-tag">Explore Earth's Orbit</span>
+          </div>
+        </div>
+
+        <div class="clock" aria-live="off">
+          <div class="clock-label"><span id="clock-mode" class="mode-pill is-live">LIVE</span> UTC</div>
+          <div class="clock-time mono" id="clock-time">—</div>
+          <div class="clock-date mono" id="clock-date">—</div>
+        </div>
+
+        <div class="top-stats" aria-label="Global statistics">
+          <div class="tstat"><span class="tstat-v mono" id="ts-loaded">—</span><span class="tstat-l">records loaded</span></div>
+          <div class="tstat"><span class="tstat-v mono" id="ts-displayed">—</span><span class="tstat-l">displayed</span></div>
+          <div class="tstat"><span class="tstat-v mono" id="ts-alt">—</span><span class="tstat-l">avg calc. altitude</span></div>
+        </div>
+
+        <div class="status-chips">
+          <button class="chip-status" id="status-data" type="button" title="Orbital element data source">
+            <span class="dot"></span><span class="cs-label">CelesTrak</span><span class="cs-val mono" id="status-data-val">—</span>
+          </button>
+          <button class="chip-status" id="status-iss" type="button" title="Live ISS API status">
+            <span class="dot"></span><span class="cs-label">ISS API</span><span class="cs-val mono" id="status-iss-val">—</span>
+          </button>
+          <button class="icon-btn" id="btn-edu" type="button" title="Orbital primer" aria-label="Open orbital primer"><svg><use href="#i-book"/></svg></button>
+        </div>
+      </header>
+
+      <!-- ============================== MAIN ============================== -->
+      <main class="layout">
+        <!-- LEFT PANEL: filters -->
+        <aside class="panel panel-left" id="panel-left" aria-label="Filters and display options">
+          <div class="panel-scroll">
+            <div class="counts">
+              <div><span class="mono" id="cnt-matching">—</span><small>matching</small></div>
+              <div><span class="mono" id="cnt-displayed">—</span><small>displayed</small></div>
+              <div><span class="mono" id="cnt-loaded">—</span><small>loaded</small></div>
+            </div>
+            <p class="hint" id="cnt-note" hidden></p>
+
+            <section class="sect">
+              <h2 class="sect-h"><svg><use href="#i-search"/></svg>Satellite search</h2>
+              <div class="search">
+                <input id="search" type="search" placeholder="Name or NORAD ID — e.g. ISS, HST, 25544" autocomplete="off" spellcheck="false" aria-label="Search satellites by name or NORAD ID" aria-controls="search-results" />
+                <ul id="search-results" class="search-results" role="listbox" hidden></ul>
+              </div>
+            </section>
+
+            <section class="sect">
+              <h2 class="sect-h"><svg><use href="#i-target"/></svg>Quick selection</h2>
+              <div class="quick">
+                <button class="qbtn" data-quick="iss" type="button">ISS</button>
+                <button class="qbtn" data-quick="hubble" type="button">Hubble</button>
+                <button class="qbtn" data-quick="gps" type="button">GPS constellation</button>
+                <button class="qbtn" data-quick="starlink" type="button">Starlink</button>
+                <button class="qbtn" data-quick="weather" type="button">Weather sats</button>
+                <button class="qbtn qbtn-ghost" data-quick="reset" type="button"><svg><use href="#i-reset"/></svg>Reset filters</button>
+              </div>
+            </section>
+
+            <section class="sect">
+              <h2 class="sect-h"><svg><use href="#i-sat"/></svg>Satellite category
+                <span class="sect-tools"><button type="button" class="link" data-all="categories">all</button><button type="button" class="link" data-none="categories">none</button></span>
+              </h2>
+              <div id="f-categories" class="checklist"></div>
+            </section>
+
+            <section class="sect">
+              <h2 class="sect-h"><svg><use href="#i-globe"/></svg>Orbital class <span class="approx" title="Derived from mean orbital elements (perigee, apogee, period, eccentricity)">approx.</span></h2>
+              <div id="f-classes" class="segmented"></div>
+            </section>
+
+            <section class="sect">
+              <h2 class="sect-h"><svg><use href="#i-chart"/></svg>Altitude <span class="approx" title="Mean altitude = semi-major axis − Earth radius, from orbital elements">mean, km</span></h2>
+              <div class="range2" id="f-alt">
+                <div class="range2-track"><span class="range2-fill" id="alt-fill"></span></div>
+                <input type="range" id="alt-min" min="0" max="1000" value="0" aria-label="Minimum mean altitude" />
+                <input type="range" id="alt-max" min="0" max="1000" value="1000" aria-label="Maximum mean altitude" />
+              </div>
+              <div class="range2-vals mono"><span id="alt-min-v">0 km</span><span id="alt-max-v">40 000+ km</span></div>
+              <div class="alt-presets">
+                <button type="button" class="link" data-alt="0,2000">LEO</button>
+                <button type="button" class="link" data-alt="2000,35000">MEO</button>
+                <button type="button" class="link" data-alt="35000,37000">GEO</button>
+                <button type="button" class="link" data-alt="0,inf">Any</button>
+              </div>
+            </section>
+
+            <section class="sect">
+              <h2 class="sect-h"><svg><use href="#i-filter"/></svg>Constellation / group
+                <span class="sect-tools"><button type="button" class="link" data-none="constellations">clear</button></span>
+              </h2>
+              <div id="f-constellations" class="chips"></div>
+              <p class="hint">None selected = no constellation restriction. Membership comes from CelesTrak groups.</p>
+            </section>
+
+            <section class="sect">
+              <h2 class="sect-h"><svg><use href="#i-info"/></svg>Display options</h2>
+              <div class="toggles" id="f-display">
+                <label class="toggle"><input type="checkbox" data-opt="markers" checked /><span></span>Satellite markers</label>
+                <label class="toggle"><input type="checkbox" data-opt="labels" checked /><span></span>Labels</label>
+                <label class="toggle"><input type="checkbox" data-opt="orbit" checked /><span></span>Orbital path (selected)</label>
+                <label class="toggle"><input type="checkbox" data-opt="ground" checked /><span></span>Ground track (selected)</label>
+                <label class="toggle"><input type="checkbox" data-opt="rotate" checked /><span></span>Auto-rotate globe</label>
+                <label class="toggle"><input type="checkbox" data-opt="shading" checked /><span></span>Day / night shading</label>
+                <label class="toggle"><input type="checkbox" data-opt="clouds" checked /><span></span>Cloud layer <em>(illustrative)</em></label>
+                <label class="toggle"><input type="checkbox" data-opt="issMarker" checked /><span></span>ISS API position marker</label>
+                <label class="toggle"><input type="checkbox" data-opt="geoRing" checked /><span></span>GEO belt reference ring</label>
+              </div>
+              <div class="field">
+                <label for="alt-mode">Rendered altitude</label>
+                <select id="alt-mode">
+                  <option value="compressed">Compressed (√ scale)</option>
+                  <option value="true">True scale (1 : 1)</option>
+                  <option value="ground">Ground projection</option>
+                </select>
+                <p class="hint" id="alt-mode-note"></p>
+              </div>
+              <div class="field">
+                <label for="render-limit">Render limit <span class="mono" id="render-limit-v"></span></label>
+                <input type="range" id="render-limit" min="250" max="20000" step="250" />
+                <p class="hint">Maximum markers drawn. Large categories are evenly sub-sampled when the limit is reached.</p>
+              </div>
+            </section>
+          </div>
+        </aside>
+
+        <!-- CENTER: globe -->
+        <section class="viewport" id="viewport" aria-label="3D globe">
+          <div id="globe" class="globe"></div>
+          <div id="labels" class="labels" aria-hidden="true"></div>
+          <div id="tooltip" class="tooltip" hidden></div>
+
+          <div class="sim-banner" id="sim-banner" hidden>
+            <svg><use href="#i-warn"/></svg>
+            <span><strong id="sim-banner-title">Simulated time</strong> <span id="sim-banner-text"></span></span>
+            <button type="button" class="link" id="sim-banner-live">Return to live</button>
+          </div>
+          <div class="stale-banner" id="stale-banner" hidden></div>
+
+          <div class="view-ctrl" role="toolbar" aria-label="Camera controls">
+            <button class="icon-btn" id="cam-in" type="button" title="Zoom in" aria-label="Zoom in"><svg><use href="#i-plus"/></svg></button>
+            <button class="icon-btn" id="cam-out" type="button" title="Zoom out" aria-label="Zoom out"><svg><use href="#i-minus"/></svg></button>
+            <button class="icon-btn" id="cam-reset" type="button" title="Reset camera" aria-label="Reset camera"><svg><use href="#i-home"/></svg></button>
+          </div>
+
+          <div class="empty-state" id="empty-state" hidden>
+            <svg><use href="#i-search"/></svg>
+            <div><strong>No satellites match the current filters.</strong><br /><span id="empty-detail"></span></div>
+            <button type="button" class="btn btn-sm" data-quick="reset">Reset filters</button>
+          </div>
+
+          <div class="alt-badge mono" id="alt-badge"></div>
+        </section>
+
+        <!-- RIGHT PANEL: details / overview -->
+        <aside class="panel panel-right" id="panel-right" aria-label="Satellite details and statistics">
+          <div class="tabs" role="tablist">
+            <button role="tab" class="tab is-active" id="tab-details" aria-selected="true" aria-controls="pane-details" type="button"><svg><use href="#i-sat"/></svg>Satellite</button>
+            <button role="tab" class="tab" id="tab-overview" aria-selected="false" aria-controls="pane-overview" type="button"><svg><use href="#i-chart"/></svg>Overview</button>
+          </div>
+          <div class="panel-scroll">
+            <div id="pane-details" role="tabpanel" aria-labelledby="tab-details"></div>
+            <div id="pane-overview" role="tabpanel" aria-labelledby="tab-overview" hidden></div>
+          </div>
+        </aside>
+      </main>
+
+      <!-- ============================== BOTTOM BAR ============================== -->
+      <footer class="bottombar">
+        <div class="tl">
+          <div class="tl-buttons">
+            <button class="icon-btn" id="tl-back" type="button" title="Back 1 hour" aria-label="Back one hour"><svg><use href="#i-back"/></svg></button>
+            <button class="icon-btn icon-btn-primary" id="tl-play" type="button" title="Pause simulation" aria-label="Pause simulation"><svg><use href="#i-pause"/></svg></button>
+            <button class="icon-btn" id="tl-fwd" type="button" title="Forward 1 hour" aria-label="Forward one hour"><svg><use href="#i-fwd"/></svg></button>
+            <button class="btn btn-sm btn-live" id="tl-live" type="button" title="Return to the current time"><svg><use href="#i-live"/></svg>Now</button>
+          </div>
+          <div class="tl-speeds" role="group" aria-label="Simulation speed">
+            <button class="tl-speed" data-speed="1" type="button">1×</button>
+            <button class="tl-speed" data-speed="10" type="button">10×</button>
+            <button class="tl-speed" data-speed="60" type="button">60×</button>
+            <button class="tl-speed" data-speed="600" type="button">600×</button>
+          </div>
+          <div class="tl-slider">
+            <div class="tl-scale mono"><span>−24 h</span><span id="tl-offset" class="tl-offset">LIVE</span><span>+24 h</span></div>
+            <input type="range" id="tl-slider" aria-label="Simulation time offset from now (minutes)" />
+          </div>
+        </div>
+        <div class="legend" id="legend" aria-label="Legend"></div>
+        <div class="perf mono" id="perf" title="Rendering frame rate and worker propagation time"></div>
+      </footer>
+
+      <!-- mobile tabs -->
+      <nav class="mobile-tabs" aria-label="Panels">
+        <button type="button" data-drawer="left"><svg><use href="#i-filter"/></svg>Filters</button>
+        <button type="button" data-drawer="none" class="is-active"><svg><use href="#i-globe"/></svg>Globe</button>
+        <button type="button" data-drawer="right"><svg><use href="#i-sat"/></svg>Details</button>
+      </nav>
+    </div>
+
+    <!-- ============================== DIALOGS ============================== -->
+    <dialog id="dlg-edu" class="dialog" aria-labelledby="edu-title">
+      <div class="dialog-head">
+        <h2 id="edu-title"><svg><use href="#i-book"/></svg>Orbital primer</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="dialog-body edu">
+        <article>
+          <h3>What is an artificial satellite?</h3>
+          <p>A human-made object placed in orbit: it moves fast enough sideways that, as it falls toward Earth, the surface curves away beneath it. Satellites relay communications, provide navigation signals, observe weather and land, and carry science instruments and crews.</p>
+        </article>
+        <article>
+          <h3>LEO, MEO and GEO</h3>
+          <p><b>Low Earth orbit</b> (up to ~2 000 km) hosts the ISS, Hubble, Earth-imaging satellites and mega-constellations like Starlink; one revolution takes ~90–130 min. <b>Medium Earth orbit</b> (2 000–35 586 km) is home to navigation systems — GPS orbits at ~20 200 km with a 12-hour period. <b>Geosynchronous orbit</b> (~35 786 km) has a period of one sidereal day; over the equator (geostationary) a satellite appears fixed in the sky. Classes in this app are approximate and derived from the orbital elements.</p>
+        </article>
+        <article>
+          <h3>Inclination</h3>
+          <p>The tilt of the orbital plane relative to the equator. 0° is an equatorial orbit; 90° passes over the poles; above 90° the satellite moves westward (retrograde). The ISS's ~51.6° inclination is why its ground track never goes beyond ~51.6° N/S. Sun-synchronous Earth-observation satellites use ~97–99°.</p>
+        </article>
+        <article>
+          <h3>Why do satellites travel at different speeds?</h3>
+          <p>Gravity weakens with distance, so the speed needed for a circular orbit drops with altitude: v = √(μ / r). The ISS moves at ~7.7 km/s, GPS satellites at ~3.9 km/s and geosynchronous satellites at ~3.1 km/s. In elliptical orbits, speed is highest at perigee and lowest at apogee (Kepler's second law).</p>
+        </article>
+        <article>
+          <h3>TLE / OMM orbital elements</h3>
+          <p>A Two-Line Element set (TLE) or its modern equivalent, the Orbit Mean-Elements Message (OMM), describes an orbit at a reference time — the <em>epoch</em> — with mean elements: mean motion, eccentricity, inclination, right ascension of the ascending node, argument of perigee, mean anomaly and the B* drag term. They are <em>not</em> coordinates: positions must be computed from them. This app uses CelesTrak's OMM JSON, which also supports catalog numbers beyond the five digits of classic TLEs.</p>
+        </article>
+        <article>
+          <h3>SGP4 propagation</h3>
+          <p>SGP4/SDP4 is the analytic model the elements are fitted with. Given an element set and a time, it predicts position and velocity, accounting for Earth's oblateness, atmospheric drag and (for deep-space orbits) lunar and solar effects. Accuracy is typically around a kilometre at epoch, degrading by roughly 1–3 km per day — so fresh elements matter. Your browser runs SGP4 (via satellite.js) for every displayed satellite, many times per second.</p>
+        </article>
+        <article>
+          <h3>Telemetry vs. predicted position</h3>
+          <p>Telemetry is data measured and transmitted by the spacecraft or tracking stations. A predicted position is <em>calculated</em> from orbital elements. Every satellite position in this app is a calculated prediction; the ISS additionally shows the position reported by the WhereTheISS.at API, which is an independent, provider-computed value — not raw spacecraft telemetry. Comparing the two is a good sanity check.</p>
+        </article>
+        <article>
+          <h3>Reading the visualisation</h3>
+          <p>The <b>orbital path</b> is one full revolution of propagated positions, drawn in the Earth-fixed frame at the current instant — the shape of the orbit in space. The <b>ground track</b> is the path of the point directly beneath the satellite, which shifts westward each orbit because Earth rotates underneath. Dashed segments are the past, solid segments the future. Rendered altitude may be compressed for legibility; real altitudes are always shown in the details panel.</p>
+        </article>
+      </div>
+    </dialog>
+
+    <dialog id="dlg-data" class="dialog dialog-wide" aria-labelledby="data-title">
+      <div class="dialog-head">
+        <h2 id="data-title"><svg><use href="#i-db"/></svg>Data sources &amp; freshness</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="dialog-body" id="data-body"></div>
+    </dialog>
+  </body>
+</html>
